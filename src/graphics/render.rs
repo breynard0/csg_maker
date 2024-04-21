@@ -1,18 +1,21 @@
 use wgpu::SurfaceError;
 
-use super::wgpu_object::WgpuObject;
+use crate::AppData;
 
-pub fn render(wobj: &mut WgpuObject) -> Result<(), SurfaceError> {
-    let output = wobj.surface.get_current_texture()?;
+use super::rendering_object::RenderingObject;
+
+pub fn render(appdata: &mut AppData) -> Result<(), SurfaceError> {
+    let robj = &appdata.rendering_object;
+    let output = robj.surface.get_current_texture()?;
     let view = output.texture.create_view(&wgpu::TextureViewDescriptor {
         label: Some("RenderTexture View"),
-        format: Some(wobj.config.view_formats[0]),
+        format: Some(robj.config.view_formats[0]),
         dimension: Some(wgpu::TextureViewDimension::D2),
         aspect: wgpu::TextureAspect::All,
         ..Default::default()
     });
 
-    let color_attachment = match WgpuObject::SAMPLE_COUNT {
+    let color_attachment = match RenderingObject::SAMPLE_COUNT {
         1 => wgpu::RenderPassColorAttachment {
             view: &view,
             resolve_target: None,
@@ -22,7 +25,7 @@ pub fn render(wobj: &mut WgpuObject) -> Result<(), SurfaceError> {
             },
         },
         _ => wgpu::RenderPassColorAttachment {
-            view: &wobj.msaa_buffer,
+            view: &robj.msaa_buffer,
             resolve_target: Some(&view),
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
@@ -31,7 +34,7 @@ pub fn render(wobj: &mut WgpuObject) -> Result<(), SurfaceError> {
         },
     };
 
-    let mut encoder = wobj
+    let mut encoder = robj
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("commandencoder"),
@@ -43,7 +46,7 @@ pub fn render(wobj: &mut WgpuObject) -> Result<(), SurfaceError> {
             label: Some("MainRenderPass"),
             color_attachments: &[Some(color_attachment.clone())],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                view: &wobj.depth_texture.view,
+                view: &robj.depth_texture.view,
                 depth_ops: Some(wgpu::Operations {
                     load: wgpu::LoadOp::Clear(1.0),
                     store: wgpu::StoreOp::Store,
@@ -54,16 +57,16 @@ pub fn render(wobj: &mut WgpuObject) -> Result<(), SurfaceError> {
             occlusion_query_set: None,
         });
 
-        render_pass.execute_bundles(std::iter::once(&wobj.msaa_bundle));
+        render_pass.execute_bundles(std::iter::once(&robj.msaa_bundle));
 
-        render_pass.set_pipeline(&wobj.pipeline);
-        render_pass.set_bind_group(0, &wobj.uniform_bind_group, &[]);
-        render_pass.set_vertex_buffer(0, wobj.vertex_buffer.slice(..));
-        render_pass.set_index_buffer(wobj.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        render_pass.draw_indexed(0..wobj.index_buffer_size, 0, 0..1);
+        render_pass.set_pipeline(&robj.pipeline);
+        render_pass.set_bind_group(0, &robj.uniform_bind_group, &[]);
+        render_pass.set_vertex_buffer(0, robj.vertex_buffer.slice(..));
+        render_pass.set_index_buffer(robj.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        render_pass.draw_indexed(0..robj.index_buffer_size, 0, 0..1);
     }
 
-    wobj.queue.submit(std::iter::once(encoder.finish()));
+    robj.queue.submit(std::iter::once(encoder.finish()));
 
     output.present();
 

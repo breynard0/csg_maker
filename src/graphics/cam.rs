@@ -2,6 +2,7 @@ use cgmath::SquareMatrix;
 
 use crate::utils::consts::OPENGL_TO_WGPU_MATRIX;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Camera {
     pub eye: cgmath::Point3<f32>,
     pub target: cgmath::Point3<f32>,

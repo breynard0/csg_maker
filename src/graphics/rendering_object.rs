@@ -2,7 +2,8 @@ use winit::{keyboard::KeyCode, window::Window};
 
 use super::{cam::Camera, init, input, uniform::UniformData};
 
-pub struct WgpuObject<'a> {
+#[derive(Debug)]
+pub struct RenderingObject<'a> {
     pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
@@ -27,8 +28,7 @@ pub struct WgpuObject<'a> {
     pub delta_time: f32,
 }
 
-static mut ANGLE: f32 = 0.0;
-impl WgpuObject<'_> {
+impl RenderingObject<'_> {
     pub const SAMPLE_COUNT: u32 = 8;
 
     pub fn window(&self) -> &Window {
@@ -58,17 +58,6 @@ impl WgpuObject<'_> {
                 self.wireframe,
             );
         }
-
-        unsafe {
-            ANGLE += 0.01;
-            println!("{}", ANGLE);
-        }
-
-        let vertex_index_buffer = super::vertex::test_cube(&self.device, unsafe { ANGLE });
-        self.vertex_buffer = vertex_index_buffer.vbo;
-        self.vertex_buffer_size = vertex_index_buffer.vbo_size;
-        self.index_buffer = vertex_index_buffer.idxbuf;
-        self.index_buffer_size = vertex_index_buffer.idx_size;
 
         input::input_update();
     }

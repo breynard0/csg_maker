@@ -7,11 +7,11 @@ pub mod render;
 pub mod texture;
 pub mod uniform;
 pub mod vertex;
-pub mod wgpu_object;
+pub mod rendering_object;
 
 use winit::{event::*, event_loop::EventLoop, window::WindowBuilder};
 
-use crate::utils::log::log;
+use crate::{object::world_object::WorldObject, utils::log::log, AppData};
 pub async fn run() {
     env_logger::init();
     let event_loop = EventLoop::new().expect("Failed to create event loop");
@@ -23,7 +23,10 @@ pub async fn run() {
         .unwrap();
     let window_id = window.id();
 
-    let mut wgpu_obj = init::gfx_init(&window).await;
+    let mut app_data = AppData {
+        rendering_object: init::gfx_init(&window).await,
+        world_object: WorldObject::new(),
+    };
 
     let mut last_frame = std::time::Instant::now();
 
@@ -32,11 +35,11 @@ pub async fn run() {
             ref event,
             window_id: queried_window_id,
         } if queried_window_id == window_id => match event {
-            WindowEvent::RedrawRequested if window_id == wgpu_obj.window().id() => {
-                wgpu_obj.update();
-                match render::render(&mut wgpu_obj) {
+            WindowEvent::RedrawRequested if window_id == app_data.rendering_object.window().id() => {
+                app_data.rendering_object.update();
+                match render::render(&mut app_data) {
                     Ok(_) => {}
-                    Err(wgpu::SurfaceError::Lost) => wgpu_obj.resize(wgpu_obj.size),
+                    Err(wgpu::SurfaceError::Lost) => app_data.rendering_object.resize(app_data.rendering_object.size),
                     Err(wgpu::SurfaceError::OutOfMemory) => {
                         log(
                             "Not enough memory to map the next frame!",
@@ -55,18 +58,18 @@ pub async fn run() {
             }
             WindowEvent::MouseWheel { delta, .. } => input::poll_scroll_wheel(delta),
             WindowEvent::Resized(physical_size) => {
-                wgpu_obj.resize(*physical_size);
+                app_data.rendering_object.resize(*physical_size);
             }
             WindowEvent::CursorMoved { position, .. } => input::poll_mouse_move_event(position),
             WindowEvent::CloseRequested => elwt.exit(),
             _ => {}
         },
         Event::AboutToWait => {
-            wgpu_obj.delta_time = std::time::Instant::now()
+            app_data.rendering_object.delta_time = std::time::Instant::now()
                 .duration_since(last_frame)
                 .as_secs_f32();
             last_frame = std::time::Instant::now();
-            wgpu_obj.window().request_redraw();
+            app_data.rendering_object.window().request_redraw();
         }
         _ => {}
     }) {

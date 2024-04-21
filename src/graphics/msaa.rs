@@ -1,6 +1,6 @@
 use crate::utils::consts::*;
 
-use super::wgpu_object::WgpuObject;
+use super::rendering_object::RenderingObject;
 
 pub fn create_multisampled_framebuffer(
     device: &wgpu::Device,
@@ -45,7 +45,7 @@ pub fn create_bundle(
             depth_read_only: false,
             stencil_read_only: false,
         }),
-        sample_count: WgpuObject::SAMPLE_COUNT,
+        sample_count: RenderingObject::SAMPLE_COUNT,
         multiview: None,
     });
     encoder.set_pipeline(&pipeline);
@@ -57,7 +57,7 @@ pub fn create_bundle(
     })
 }
 
-pub fn rebuild_msaa(wobj: &mut WgpuObject) {
+pub fn rebuild_msaa(wobj: &mut RenderingObject) {
     wobj.msaa_bundle = create_bundle(
         &wobj.device,
         &wobj.config,
@@ -67,5 +67,5 @@ pub fn rebuild_msaa(wobj: &mut WgpuObject) {
         wobj.index_buffer_size,
     );
     wobj.msaa_buffer =
-        create_multisampled_framebuffer(&wobj.device, &wobj.config, WgpuObject::SAMPLE_COUNT);
+        create_multisampled_framebuffer(&wobj.device, &wobj.config, RenderingObject::SAMPLE_COUNT);
 }

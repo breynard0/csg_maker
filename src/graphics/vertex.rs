@@ -7,11 +7,12 @@ use crate::utils::consts::*;
 pub struct Vertex {
     pub pos: [f32; 3],
     pub color: [f32; 4],
+    pub object_id: u32
 }
 
 impl Vertex {
-    pub fn new(pos: [f32; 3], color: [f32; 4]) -> Self {
-        Self { pos, color }
+    pub fn new(pos: [f32; 3], color: [f32; 4], id: u32) -> Self {
+        Self { pos, color, object_id: id }
     }
 }
 
@@ -32,24 +33,37 @@ pub fn vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
 }
 
 fn rot(point: [f32; 3], angle: f32) -> [f32; 3] {
-    [
+    // X rotation
+    let point = [
         point[0],
         point[1] * angle.cos() - point[2] * angle.sin(),
         point[1] * angle.sin() + point[2] * angle.cos(),
-    ]
-    // point
+    ];
+    // Y rotation
+    let point = [
+        point[0] * angle.cos() + point[2] * angle.sin(),
+        point[1],
+        -point[0] * angle.sin() + point[2] * angle.cos(),
+    ];
+    // Z rotation
+    let point = [
+        point[0] * angle.cos() - point[1] * angle.sin(),
+        point[0] * angle.sin() + point[1] * angle.cos(),
+        point[2],
+    ];
+    point
 }
 
 pub fn test_cube(device: &wgpu::Device, angle: f32) -> BufferOutput {
     let vertices = [
-        Vertex::new(rot([-0.5, -0.5, -0.5], angle), [1.0, 0.0, 0.0, 1.0]),
-        Vertex::new(rot([-0.5, -0.5, 0.5], angle), [0.0, 1.0, 0.0, 1.0]),
-        Vertex::new(rot([0.5, -0.5, 0.5], angle), [0.0, 0.0, 1.0, 1.0]),
-        Vertex::new(rot([0.5, -0.5, -0.5], angle), [1.0, 1.0, 1.0, 1.0]),
-        Vertex::new(rot([-0.5, 0.5, -0.5], angle), [1.0, 0.0, 1.0, 1.0]),
-        Vertex::new(rot([-0.5, 0.5, 0.5], angle), [0.0, 1.0, 1.0, 1.0]),
-        Vertex::new(rot([0.5, 0.5, 0.5], angle), [0.0, 0.0, 0.0, 1.0]),
-        Vertex::new(rot([0.5, 0.5, -0.5], angle), [1.0, 1.0, 0.0, 1.0]),
+        Vertex::new(rot([-0.5, -0.5, -0.5], angle), [1.0, 0.0, 0.0, 1.0], 0),
+        Vertex::new(rot([-0.5, -0.5, 0.5], angle), [0.0, 1.0, 0.0, 1.0], 0),
+        Vertex::new(rot([0.5, -0.5, 0.5], angle), [0.0, 0.0, 1.0, 1.0], 0),
+        Vertex::new(rot([0.5, -0.5, -0.5], angle), [1.0, 1.0, 1.0, 1.0], 0),
+        Vertex::new(rot([-0.5, 0.5, -0.5], angle), [1.0, 0.0, 1.0, 1.0], 0),
+        Vertex::new(rot([-0.5, 0.5, 0.5], angle), [0.0, 1.0, 1.0, 1.0], 0),
+        Vertex::new(rot([0.5, 0.5, 0.5], angle), [0.0, 0.0, 0.0, 1.0], 0),
+        Vertex::new(rot([0.5, 0.5, -0.5], angle), [1.0, 1.0, 0.0, 1.0], 0),
     ];
 
     let indices = [

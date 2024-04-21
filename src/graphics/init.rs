@@ -1,10 +1,10 @@
 use wgpu::{util::DeviceExt, Backends, FragmentState, Limits, TextureFormat, VertexState};
 
-use super::{cam::Camera, msaa, uniform::UniformData, vertex, wgpu_object::WgpuObject};
+use super::{cam::Camera, msaa, rendering_object::RenderingObject, uniform::UniformData, vertex};
 
-use crate::utils::consts::*;
+use crate::utils::{consts::*, log::{log, LogLevel}};
 
-pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
+pub async fn gfx_init(window: &winit::window::Window) -> RenderingObject {
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
         backends: Backends::all(),
         dx12_shader_compiler: wgpu::Dx12Compiler::Fxc,
@@ -68,7 +68,7 @@ pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
 
     let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/main.wgsl"));
 
-    let vertex_index_buffer = vertex::test_cube(&device, 0.0);
+    let vertex_index_buffer = vertex::test_cube(&device, 0.7);
 
     let cam = Camera {
         eye: (0.0, 1.0, 2.0).into(),
@@ -85,11 +85,18 @@ pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
     };
     cam.update_view_proj(&mut uniform_buffer_data.cam_view_proj);
 
+    let mut uniform_buffer_bytes = encase::UniformBuffer::new(Vec::new());
+    uniform_buffer_bytes.write(&uniform_buffer_data).unwrap();
+
+    let b = uniform_buffer_bytes.into_inner();
+    println!("{:?}", b.clone());
+
     let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("Uniform Buffer"),
-        contents: bytemuck::cast_slice(&[uniform_buffer_data]),
+        contents: &b,
         usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
     });
+
 
     let uniform_bind_group_layout =
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -130,7 +137,7 @@ pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
     );
 
     let msaa_buffer =
-        msaa::create_multisampled_framebuffer(&device, &config, WgpuObject::SAMPLE_COUNT);
+        msaa::create_multisampled_framebuffer(&device, &config, RenderingObject::SAMPLE_COUNT);
 
     let msaa_bundle = msaa::create_bundle(
         &device,
@@ -141,7 +148,7 @@ pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
         vertex_index_buffer.idx_size,
     );
 
-    let mut out = WgpuObject {
+    let mut out = RenderingObject {
         surface,
         device,
         queue,
@@ -212,7 +219,7 @@ pub fn create_render_pipeline<'a>(
             bias: wgpu::DepthBiasState::default(),
         }),
         multisample: wgpu::MultisampleState {
-            count: WgpuObject::SAMPLE_COUNT,
+            count: RenderingObject::SAMPLE_COUNT,
             mask: !0,
             alpha_to_coverage_enabled: false,
         },

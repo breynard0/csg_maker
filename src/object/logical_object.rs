@@ -2,6 +2,7 @@ use glam::Vec3;
 
 use super::hierarchy::Hierarchy;
 
+#[derive(Debug, Clone)]
 pub struct LogicalObject {
     pub name: String,
     pub id: u32,

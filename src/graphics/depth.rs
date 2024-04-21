@@ -1,6 +1,6 @@
 use crate::utils::consts::*;
 
-use super::wgpu_object::WgpuObject;
+use super::rendering_object::RenderingObject;
 
 pub fn create_depth_texture(
     device: &wgpu::Device,
@@ -16,7 +16,7 @@ pub fn create_depth_texture(
         label: Some(label),
         size,
         mip_level_count: 1,
-        sample_count: WgpuObject::SAMPLE_COUNT,
+        sample_count: RenderingObject::SAMPLE_COUNT,
         dimension: wgpu::TextureDimension::D2,
         format: DEPTH_FORMAT,
         usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
