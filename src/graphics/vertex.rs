@@ -31,34 +31,43 @@ pub fn vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
     vertex_buffer_layout
 }
 
-pub fn test_cube(device: &wgpu::Device) -> BufferOutput {
-    // let vertices = [
-    //     Vertex::new([0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 1.0]),
-    //     Vertex::new([0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 1.0]),
-    //     Vertex::new([1.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]),
-    //     Vertex::new([1.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]),
-    //     Vertex::new([0.0, 1.0, 0.0], [1.0, 0.0, 1.0, 1.0]),
-    //     Vertex::new([0.0, 1.0, 1.0], [0.0, 1.0, 1.0, 1.0]),
-    //     Vertex::new([1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 1.0]),
-    //     Vertex::new([1.0, 1.0, 0.0], [1.0, 1.0, 0.0, 1.0]),
-    // ];
+fn rot(point: [f32; 3], angle: f32) -> [f32; 3] {
+    [
+        point[0],
+        point[1] * angle.cos() - point[2] * angle.sin(),
+        point[1] * angle.sin() + point[2] * angle.cos(),
+    ]
+    // point
+}
 
-    // let indices = [
-    //     0, 3, 1, 1, 3, 2, 0, 1, 5, 0, 5, 4, 0, 4, 7, 0, 7, 3, 2, 3, 6, 3, 7, 6, 4, 5, 7, 5, 6, 7,
-    //     1, 2, 5, 2, 6, 5,
-    // ];
-
+pub fn test_cube(device: &wgpu::Device, angle: f32) -> BufferOutput {
     let vertices = [
-        Vertex::new([-0.3, -0.3, 1.0], [1.0, 0.0, 0.0, 1.0]),
-        Vertex::new([0.3, -0.3, 0.0], [0.0, 1.0, 0.0, 1.0]),
-        Vertex::new([0.3, 0.3, -0.5], [0.0, 0.0, 1.0, 1.0]),
-        Vertex::new([-0.3, 0.3, 0.0], [1.0, 1.0, 1.0, 1.0]),
+        Vertex::new(rot([-0.5, -0.5, -0.5], angle), [1.0, 0.0, 0.0, 1.0]),
+        Vertex::new(rot([-0.5, -0.5, 0.5], angle), [0.0, 1.0, 0.0, 1.0]),
+        Vertex::new(rot([0.5, -0.5, 0.5], angle), [0.0, 0.0, 1.0, 1.0]),
+        Vertex::new(rot([0.5, -0.5, -0.5], angle), [1.0, 1.0, 1.0, 1.0]),
+        Vertex::new(rot([-0.5, 0.5, -0.5], angle), [1.0, 0.0, 1.0, 1.0]),
+        Vertex::new(rot([-0.5, 0.5, 0.5], angle), [0.0, 1.0, 1.0, 1.0]),
+        Vertex::new(rot([0.5, 0.5, 0.5], angle), [0.0, 0.0, 0.0, 1.0]),
+        Vertex::new(rot([0.5, 0.5, -0.5], angle), [1.0, 1.0, 0.0, 1.0]),
     ];
 
     let indices = [
-        0, 1, 2, 
-        0, 2, 3,
+        0, 3, 1, 1, 3, 2, 0, 1, 5, 0, 5, 4, 0, 4, 7, 0, 7, 3, 2, 3, 6, 3, 7, 6, 4, 5, 7, 5, 6, 7,
+        1, 2, 5, 2, 6, 5,
     ];
+
+    // let vertices = [
+    //     Vertex::new(rot([-0.3, -0.3, 0.1], angle), [1.0, 0.0, 0.0, 1.0]),
+    //     Vertex::new(rot([0.3, -0.3, 0.1], angle), [0.0, 1.0, 0.0, 1.0]),
+    //     Vertex::new(rot([0.3, 0.3, 0.1], angle), [0.0, 0.0, 1.0, 1.0]),
+    //     Vertex::new(rot([-0.3, 0.3, 0.1], angle), [1.0, 1.0, 1.0, 1.0]),
+    // ];
+
+    // let indices = [
+    //     0, 1, 2,
+    //     0, 2, 3,
+    // ];
 
     let vbo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("VBO descriptor"),

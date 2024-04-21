@@ -1,5 +1,3 @@
-use crate::graphics::vertex::Vertex;
-
 pub mod consts;
 pub mod log;
 pub mod tests;

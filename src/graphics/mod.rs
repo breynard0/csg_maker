@@ -1,9 +1,11 @@
+pub mod cam;
 pub mod depth;
 pub mod init;
 pub mod input;
 pub mod msaa;
 pub mod render;
 pub mod texture;
+pub mod uniform;
 pub mod vertex;
 pub mod wgpu_object;
 

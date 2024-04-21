@@ -57,6 +57,7 @@ pub fn render(wobj: &mut WgpuObject) -> Result<(), SurfaceError> {
         render_pass.execute_bundles(std::iter::once(&wobj.msaa_bundle));
 
         render_pass.set_pipeline(&wobj.pipeline);
+        render_pass.set_bind_group(0, &wobj.uniform_bind_group, &[]);
         render_pass.set_vertex_buffer(0, wobj.vertex_buffer.slice(..));
         render_pass.set_index_buffer(wobj.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
         render_pass.draw_indexed(0..wobj.index_buffer_size, 0, 0..1);

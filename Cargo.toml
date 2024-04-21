@@ -18,6 +18,8 @@ bytemuck = { version = "1.15.0", features = ["derive"] }
 cgmath = "0.18.0"
 chrono = "0.4.38"
 pollster = "0.3.0"
+transform-gizmo-egui = "0.1.0"
+egui = "0.27.2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.6"
@@ -30,5 +32,5 @@ web-sys = { version = "0.3", features = [
     "Window",
     "Element",
 ]}
-
- 
+# It's a dependency of something, this is needed to prevent it from self-destructing
+getrandom = {version = "0.2.14", features = ["js"]}

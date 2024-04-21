@@ -1,10 +1,6 @@
-use wgpu::{Backends, FragmentState, Limits, TextureFormat, VertexState};
+use wgpu::{util::DeviceExt, Backends, FragmentState, Limits, TextureFormat, VertexState};
 
-use super::{
-    msaa,
-    vertex::{self},
-    wgpu_object::WgpuObject,
-};
+use super::{cam::Camera, msaa, uniform::UniformData, vertex, wgpu_object::WgpuObject};
 
 use crate::utils::consts::*;
 
@@ -72,11 +68,56 @@ pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
 
     let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/main.wgsl"));
 
-    let vertex_index_buffer = vertex::test_cube(&device);
+    let vertex_index_buffer = vertex::test_cube(&device, 0.0);
+
+    let cam = Camera {
+        eye: (0.0, 1.0, 2.0).into(),
+        target: (0.0, 0.0, 0.0).into(),
+        up: cgmath::Vector3::unit_y(),
+        aspect: config.width as f32 / config.height as f32,
+        fovy: 45.0,
+        znear: 0.1,
+        zfar: 100.0,
+    };
+
+    let mut uniform_buffer_data = UniformData {
+        cam_view_proj: Camera::get_cam_view_proj(),
+    };
+    cam.update_view_proj(&mut uniform_buffer_data.cam_view_proj);
+
+    let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("Uniform Buffer"),
+        contents: bytemuck::cast_slice(&[uniform_buffer_data]),
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+    });
+
+    let uniform_bind_group_layout =
+        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Uniform Bind Group Layout"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
+
+    let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("Uniform Bind Group"),
+        layout: &uniform_bind_group_layout,
+        entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: uniform_buffer.as_entire_binding(),
+        }],
+    });
 
     let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: Some("RenderPipelineLayout"),
-        bind_group_layouts: &[],
+        bind_group_layouts: &[&uniform_bind_group_layout],
         push_constant_ranges: &[],
     });
 
@@ -119,6 +160,10 @@ pub async fn gfx_init(window: &winit::window::Window) -> WgpuObject {
         depth_texture,
         wireframe,
         delta_time: 0.0,
+        cam,
+        uniform_buffer_data,
+        uniform_buffer,
+        uniform_bind_group,
     };
 
     out.update();

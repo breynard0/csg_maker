@@ -1,6 +1,6 @@
 use winit::{keyboard::KeyCode, window::Window};
 
-use super::{init, input};
+use super::{cam::Camera, init, input, uniform::UniformData};
 
 pub struct WgpuObject<'a> {
     pub surface: wgpu::Surface<'a>,
@@ -20,9 +20,14 @@ pub struct WgpuObject<'a> {
     pub msaa_bundle: wgpu::RenderBundle,
     pub depth_texture: super::texture::Texture,
     pub wireframe: bool,
+    pub cam: Camera,
+    pub uniform_buffer_data: UniformData,
+    pub uniform_buffer: wgpu::Buffer,
+    pub uniform_bind_group: wgpu::BindGroup,
     pub delta_time: f32,
 }
 
+static mut ANGLE: f32 = 0.0;
 impl WgpuObject<'_> {
     pub const SAMPLE_COUNT: u32 = 8;
 
@@ -54,10 +59,17 @@ impl WgpuObject<'_> {
             );
         }
 
-        input::input_update();
-    }
+        unsafe {
+            ANGLE += 0.01;
+            println!("{}", ANGLE);
+        }
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        todo!()
+        let vertex_index_buffer = super::vertex::test_cube(&self.device, unsafe { ANGLE });
+        self.vertex_buffer = vertex_index_buffer.vbo;
+        self.vertex_buffer_size = vertex_index_buffer.vbo_size;
+        self.index_buffer = vertex_index_buffer.idxbuf;
+        self.index_buffer_size = vertex_index_buffer.idx_size;
+
+        input::input_update();
     }
 }
